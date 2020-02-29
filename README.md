@@ -2,14 +2,33 @@
 
 带有农历的日历
 
-## Getting Started
+![输入图片说明](./readme.png?raw=true "在这里输入图片标题")
 
-This project is a starting point for a Dart
-[package](https://flutter.dev/developing-packages/),
-a library module containing code that can be shared easily across
-multiple Flutter or Dart projects.
+## Example
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+```dart
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Container(
+          child: CalendarView(
+            initDateTime: DateTime.now(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+```
+
 
