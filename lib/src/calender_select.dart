@@ -25,6 +25,7 @@ class CalenderSelect extends StatefulWidget {
   final CalendarUtils calendarUtils;
   final Color selectColor;
   final void Function(DateTime start, DateTime end) onSelect;
+  final bool isRange;
 
   CalenderSelect({
     Key key,
@@ -38,6 +39,7 @@ class CalenderSelect extends StatefulWidget {
     this.calendarUtils,
     this.selectColor,
     this.onSelect,
+    this.isRange = true,
   })  : assert(null != initDateTime),
         super(key: key);
 
@@ -52,6 +54,11 @@ class _CalenderSelectState extends State<CalenderSelect> {
   Color _selectColor;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _selectColor = widget.selectColor ?? Theme.of(context).primaryColor;
     return Material(
@@ -64,6 +71,7 @@ class _CalenderSelectState extends State<CalenderSelect> {
         titleStyle: widget.titleStyle,
         calendarUtils: widget.calendarUtils,
         builderItem: _builderItem,
+        onChange: _onChange,
       ),
     );
   }
@@ -120,7 +128,7 @@ class _CalenderSelectState extends State<CalenderSelect> {
             _start = _end = null;
           }
 
-          if (null == _start) {
+          if (null == _start || true != widget.isRange) {
             _start = info.solarDate;
           } else {
             int temp = _compareDate(info.solarDate, _start);
@@ -161,4 +169,86 @@ class _CalenderSelectState extends State<CalenderSelect> {
     }
     return 0;
   }
+
+  Widget _onChange(DateTime dateTime) {}
+}
+
+Future<List<DateTime>> showDateRangePicker({
+  BuildContext context,
+  DateTime initDateTime,
+  bool isRange = true,
+}) {
+  assert(null != context);
+  assert(null != initDateTime);
+  return showDialog(
+    context: context,
+    builder: (context) {
+      List<DateTime> _list = [];
+      return Center(
+        child: SizedBox(
+          width: 334,
+          child: ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+            child: Material(
+              child: Container(
+                padding: EdgeInsets.only(top: 24, left: 12, bottom: 12, right: 12),
+                child: StatefulBuilder(builder: (context, state) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      CalenderSelect(
+                        initDateTime: initDateTime,
+                        isRange: isRange,
+                        onSelect: (start, end) {
+                          state(() {
+                            _list = [];
+                            if (null != start) {
+                              _list.add(start);
+                            }
+                            if (null != end) {
+                              _list.add(end);
+                            }
+                          });
+                        },
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 12),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("取消"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            SizedBox(width: 12),
+                            RaisedButton(
+                              color: Theme.of(context).primaryColor,
+                              child: Text(
+                                "确定",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              onPressed: (isRange ? 2 == _list.length : 1 == _list.length)
+                                  ? () {
+                                      Navigator.of(context).pop(_list);
+                                    }
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

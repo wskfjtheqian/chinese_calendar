@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SelelctDatePage(),
+      home: MyHomePage(),
     );
   }
 }
@@ -27,16 +27,56 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: Center(
-        child: Container(
-          child: CalendarView(
-            initDateTime: DateTime.now(),
+      body: ListView(
+        children: <Widget>[
+          ListTile(
+            title: Text("日历控件"),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                return;
+              }));
+            },
           ),
-        ),
+          ListTile(
+            title: Text("选择日期范围"),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                return SelelctDatePage();
+              }));
+            },
+          ),
+          ListTile(
+            title: Text("选择日期对话框"),
+            onTap: () {
+              showDateRangePicker(context: context, initDateTime: DateTime.now());
+            },
+          ),
+        ],
       ),
     );
   }
 }
+
+//class MyHomePage extends StatefulWidget {
+//  @override
+//  _MyHomePageState createState() => _MyHomePageState();
+//}
+//
+//class _MyHomePageState extends State<MyHomePage> {
+//  @override
+//  Widget build(BuildContext context) {
+//    return Scaffold(
+//      appBar: AppBar(),
+//      body: Center(
+//        child: Container(
+//          child: CalendarView(
+//            initDateTime: DateTime.now(),
+//          ),
+//        ),
+//      ),
+//    );
+//  }
+//}
 
 class SelelctDatePage extends StatefulWidget {
   @override
