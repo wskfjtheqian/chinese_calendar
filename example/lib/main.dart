@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: SelelctDatePage(),
     );
   }
 }
@@ -30,6 +30,26 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Container(
           child: CalendarView(
+            initDateTime: DateTime.now(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SelelctDatePage extends StatefulWidget {
+  @override
+  _SelelctDatePageState createState() => _SelelctDatePageState();
+}
+
+class _SelelctDatePageState extends State<SelelctDatePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Container(
+          child: CalenderSelect(
             initDateTime: DateTime.now(),
           ),
         ),

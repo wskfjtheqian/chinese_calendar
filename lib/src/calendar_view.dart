@@ -23,11 +23,11 @@ class CalendarView extends StatefulWidget {
   final TextStyle dayStyle;
   final TextStyle garyStyle;
   final EdgeInsetsGeometry contentPadding;
-  final Widget Function(CalendarInfo info, Widget child) builderItem;
-  final Widget Function(DateTime dateTime) onChange;
   final TextStyle titleStyle;
   final CalendarUtils calendarUtils;
 
+  final Widget Function(CalendarInfo info, Widget child) builderItem;
+  final Widget Function(DateTime dateTime) onChange;
   const CalendarView({
     Key key,
     this.initDateTime,
@@ -194,7 +194,7 @@ class _CalenderContent extends StatelessWidget {
                   return Container(
                     width: width,
                     height: height,
-                    padding: EdgeInsets.all(4),
+                    padding: EdgeInsets.symmetric(vertical: 3),
                     child: child,
                   );
                 }).toList(),
