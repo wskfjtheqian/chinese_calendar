@@ -628,15 +628,39 @@ class CalendarUtils {
       gzMonth: gzMonth,
       gzDay: gzDay,
       term: term,
-      festival: _lfestival['${solarDate.year}-${solarDate.month}'],
-      lunarFestival: _festival['${lunarDate.year}-${lunarDate.month}'],
+      festival: _festival['${solarDate.month}-${solarDate.day}'],
+      lunarFestival: _lfestival['${lunarDate.month}-${lunarDate.day}'],
     );
+  }
+
+  static int compareDate(DateTime date1, DateTime date2) {
+    if (null == date1 || null == date2) {
+      return null;
+    }
+    if (date1.year > date2.year) {
+      return 1;
+    } else if (date1.year < date2.year) {
+      return -1;
+    } else if (date1.month > date2.month) {
+      return 1;
+    } else if (date1.month < date2.month) {
+      return -1;
+    } else if (date1.day > date2.day) {
+      return 1;
+    } else if (date1.day < date2.day) {
+      return -1;
+    }
+    return 0;
   }
 }
 
 class CalendarInfo {
+  ///农历日期
   final DateTime lunarDate;
+
+  ///公历日期
   final DateTime solarDate;
+
   final String lunarYearName;
   final String lunarMonthName;
   final String lunarDayName;

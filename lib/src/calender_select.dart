@@ -18,28 +18,34 @@ class CalenderSelect extends StatefulWidget {
   ///结束时间
   final DateTime endDateTime;
 
-  final TextStyle dayStyle;
-  final TextStyle garyStyle;
   final EdgeInsetsGeometry contentPadding;
-  final TextStyle titleStyle;
   final CalendarUtils calendarUtils;
-  final Color selectColor;
   final void Function(DateTime start, DateTime end) onSelect;
+
+  ///是否选择范围
   final bool isRange;
+
+  ///显示非当前月的天
+  final bool showOtherDay;
+
+  ///选择非当前月的天
+  final bool selectOtherDay;
+
+  ///显示农历
+  final bool showLunary;
 
   CalenderSelect({
     Key key,
     this.initDateTime,
     this.contentPadding = const EdgeInsets.only(),
-    this.dayStyle = const TextStyle(color: Color(0xff000000)),
-    this.garyStyle = const TextStyle(color: Color(0xffdddddd)),
     this.startDateTime,
     this.endDateTime,
-    this.titleStyle = const TextStyle(color: Color(0xff000000)),
     this.calendarUtils,
-    this.selectColor,
     this.onSelect,
     this.isRange = true,
+    this.showOtherDay,
+    this.showLunary,
+    this.selectOtherDay,
   })  : assert(null != initDateTime),
         super(key: key);
 
@@ -49,69 +55,77 @@ class CalenderSelect extends StatefulWidget {
 
 class _CalenderSelectState extends State<CalenderSelect> {
   final Radius _radius = Radius.circular(50);
+  TextStyle _dayStyle;
+  TextStyle _garyStyle;
+  TextStyle _lunarDayStyle;
   DateTime _start;
   DateTime _end;
   Color _selectColor;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  Color _selectTextColor;
+  bool _lunary;
+  bool _selectOtherDay;
 
   @override
   Widget build(BuildContext context) {
-    _selectColor = widget.selectColor ?? Theme.of(context).primaryColor;
+    CalenderThemeData theme = CalenderTheme.of(context);
+    _dayStyle = theme?.dayStyle ?? TextStyle(color: Color(0xff000000));
+    _garyStyle = theme?.garyStyle ?? TextStyle(color: Color(0xffcccccc));
+    _lunarDayStyle = theme?.lunarDayStyle ?? TextStyle(color: Color(0xffcccccc), fontSize: 10);
+    _selectColor = theme?.selectColor ?? Theme.of(context).primaryColor;
+    _selectTextColor = theme?.selectTextColor ?? Colors.white;
+    _lunary = widget.showLunary ?? theme?.showLunary ?? true;
+    _selectOtherDay = widget.selectOtherDay ?? theme?.selectOtherDay ?? false;
+
     return Material(
       child: CalendarView(
         initDateTime: widget.initDateTime,
         startDateTime: widget.startDateTime,
         endDateTime: widget.endDateTime,
-        garyStyle: widget.garyStyle,
         contentPadding: widget.contentPadding,
-        titleStyle: widget.titleStyle,
         calendarUtils: widget.calendarUtils,
-        builderItem: _builderItem,
-        onChange: _onChange,
+        builderItem: (info, child, month) => _builderItem(context, info, child, month),
+        showOtherDay: widget.showOtherDay,
+        showLunary: widget.showLunary,
       ),
     );
   }
 
-  Widget _builderItem(CalendarInfo info, Widget child) {
-    int start = _compareDate(info.solarDate, _start);
-    int end = _compareDate(info.solarDate, _end);
+  Widget _builderItem(BuildContext context, CalendarInfo info, Widget child, int month) {
+    int start = CalendarUtils.compareDate(info.solarDate, _start);
+    int end = CalendarUtils.compareDate(info.solarDate, _end);
     if (0 == start && null == end) {
       child = DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(_radius),
-          color: _selectColor,
+          color: _selectColor.withOpacity(0.8),
         ),
-        child: child,
+        child: _buildSelectChild(context, info, month),
       );
     } else if (0 == start && null != end) {
       child = DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.only(topLeft: _radius, bottomLeft: _radius),
-          color: _selectColor,
+          color: _selectColor.withOpacity(0.8),
         ),
-        child: child,
+        child: _buildSelectChild(context, info, month),
       );
     } else if (0 == end && null == start) {
       child = DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(_radius),
-          color: _selectColor,
+          color: _selectColor.withOpacity(0.8),
         ),
-        child: child,
+        child: _buildSelectChild(context, info, month),
       );
     } else if (0 == end && null != start) {
       child = DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.only(topRight: _radius, bottomRight: _radius),
-          color: _selectColor,
+          color: _selectColor.withOpacity(0.8),
         ),
-        child: child,
+        child: _buildSelectChild(context, info, month),
       );
-    } else if (1 == start && -1 == end) {
+    } else if (1 == start && -1 == end && (month == info.solarDate.month || _selectOtherDay)) {
       child = DecoratedBox(
         decoration: BoxDecoration(
           color: _selectColor.withOpacity(0.2),
@@ -120,63 +134,83 @@ class _CalenderSelectState extends State<CalenderSelect> {
       );
     }
 
-    return InkWell(
-      child: child,
-      onTap: () {
-        setState(() {
-          if (null != _start && null != _end) {
-            _start = _end = null;
-          }
+    return month == info.solarDate.month || _selectOtherDay
+        ? InkWell(
+            child: child,
+            onTap: () {
+              setState(() {
+                if (null != _start && null != _end) {
+                  _start = _end = null;
+                }
 
-          if (null == _start || true != widget.isRange) {
-            _start = info.solarDate;
-          } else {
-            int temp = _compareDate(info.solarDate, _start);
-            if (0 == temp) {
-              return;
-            }
-            if (-1 == temp) {
-              _end = _start;
-              _start = info.solarDate;
-            } else {
-              _end = info.solarDate;
-            }
-          }
-          if (null != widget.onSelect) {
-            widget.onSelect(_start, _end);
-          }
-        });
-      },
+                if (null == _start || true != widget.isRange) {
+                  _start = info.solarDate;
+                } else {
+                  int temp = CalendarUtils.compareDate(info.solarDate, _start);
+                  if (0 == temp) {
+                    return;
+                  }
+                  if (-1 == temp) {
+                    _end = _start;
+                    _start = info.solarDate;
+                  } else {
+                    _end = info.solarDate;
+                  }
+                }
+                if (null != widget.onSelect) {
+                  widget.onSelect(_start, _end);
+                }
+              });
+            },
+          )
+        : child;
+  }
+
+  _buildSelectChild(BuildContext context, CalendarInfo info, int month) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text(
+          info.solarDate.day.toString().padLeft(2, "0"),
+          style: month == month ? _dayStyle.copyWith(color: _selectTextColor) : _garyStyle.copyWith(color: _selectTextColor),
+        ),
+      ]..addAll(_lunary
+          ? [
+              Text(
+                info.lunarFestival ?? info.festival ?? info.term ?? info.lunarDayName,
+                style: _lunarDayStyle.copyWith(color: _selectTextColor),
+                overflow: TextOverflow.clip,
+              )
+            ]
+          : []),
     );
   }
-
-  int _compareDate(DateTime date1, DateTime date2) {
-    if (null == date1 || null == date2) {
-      return null;
-    }
-    if (date1.year > date2.year) {
-      return 1;
-    } else if (date1.year < date2.year) {
-      return -1;
-    } else if (date1.month > date2.month) {
-      return 1;
-    } else if (date1.month < date2.month) {
-      return -1;
-    } else if (date1.day > date2.day) {
-      return 1;
-    } else if (date1.day < date2.day) {
-      return -1;
-    }
-    return 0;
-  }
-
-  Widget _onChange(DateTime dateTime) {}
 }
 
 Future<List<DateTime>> showDateRangePicker({
   BuildContext context,
-  DateTime initDateTime,
+
+  ///是否选择范围
   bool isRange = true,
+
+  ///初妈时间
+  DateTime initDateTime,
+
+  ///开始时间
+  DateTime startDateTime,
+
+  ///结束时间
+  DateTime endDateTime,
+  CalendarUtils calendarUtils,
+
+  ///显示非当前月的天
+  bool showOtherDay,
+
+  ///选择非当前月的天
+  bool selectOtherDay,
+
+  ///显示农历
+  bool showLunary,
 }) {
   assert(null != context);
   assert(null != initDateTime);
@@ -199,6 +233,12 @@ Future<List<DateTime>> showDateRangePicker({
                       CalenderSelect(
                         initDateTime: initDateTime,
                         isRange: isRange,
+                        startDateTime: startDateTime,
+                        endDateTime: endDateTime,
+                        calendarUtils: calendarUtils,
+                        showOtherDay: showOtherDay,
+                        selectOtherDay: selectOtherDay,
+                        showLunary: showLunary,
                         onSelect: (start, end) {
                           state(() {
                             _list = [];
@@ -212,10 +252,7 @@ Future<List<DateTime>> showDateRangePicker({
                         },
                       ),
                       Padding(
-                        padding: EdgeInsets.only(top: 12),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(top: 12),
+                        padding: EdgeInsets.only(top: 6),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
