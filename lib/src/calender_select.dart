@@ -1,4 +1,4 @@
-import 'package:chinese_calendar/chinese_calendar.dart';
+import '../chinese_calendar.dart';
 import 'package:flutter/material.dart';
 
 /**
